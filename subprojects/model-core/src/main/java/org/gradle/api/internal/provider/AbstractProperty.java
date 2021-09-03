@@ -368,7 +368,7 @@ public abstract class AbstractProperty<T, S extends ValueSupplier> extends Abstr
                     throw new IllegalStateException(cannotQueryValueOf(displayName, reason));
                 }
             }
-            return finalizeOnNextGet || consumer == ValueConsumer.DisallowUnsafeRead;
+            return consumer != ValueConsumer.DoNotFinalize && (finalizeOnNextGet || consumer == ValueConsumer.DisallowUnsafeRead);
         }
 
         @Override

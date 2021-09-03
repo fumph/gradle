@@ -167,6 +167,8 @@ public abstract class TaskNode extends Node {
 
     public abstract TaskInternal getTask();
 
+    public abstract void resolveKnownOutputAndDestroyableMutations();
+
     @Override
     public boolean isPublicNode() {
         return true;

@@ -64,7 +64,8 @@ public class OutputUnpacker extends PropertyVisitor.Adapter {
         if (finalizeBeforeUnpacking) {
             value.maybeFinalizeValue();
         }
-        FileParameterUtils.resolveOutputFilePropertySpecs(ownerDisplayName, propertyName, value, filePropertyType, fileCollectionFactory, locationOnly, spec -> {
+
+        FileParameterUtils.resolveOutputFilePropertySpecs(ownerDisplayName, propertyName, value, filePropertyType, fileCollectionFactory, locationOnly, finalizeBeforeUnpacking, spec -> {
             hasSpecs.set(true);
             unpackedOutputConsumer.visitUnpackedOutputFileProperty(propertyName, optional, value, spec);
         });

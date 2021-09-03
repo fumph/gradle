@@ -179,6 +179,11 @@ public class TaskInAnotherBuild extends TaskNode {
         // Assume for now that no task in the consuming build will destroy the outputs of this task or overlaps with this task
     }
 
+    @Override
+    public void resolveKnownOutputAndDestroyableMutations() {
+        // Assume for now that no task in the consuming build will destroy the outputs of this task or overlaps with this task
+    }
+
     private static BuildIdentifier buildIdentifierOf(TaskInternal task) {
         return ((ProjectInternal) task.getProject()).getOwner().getOwner().getBuildIdentifier();
     }

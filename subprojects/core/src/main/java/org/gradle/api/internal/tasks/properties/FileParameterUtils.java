@@ -25,6 +25,8 @@ import org.gradle.api.internal.file.FileCollectionInternal;
 import org.gradle.api.internal.file.FileCollectionStructureVisitor;
 import org.gradle.api.internal.file.FileTreeInternal;
 import org.gradle.api.internal.file.collections.FileSystemMirroringFileTree;
+import org.gradle.api.internal.provider.ProviderInternal;
+import org.gradle.api.internal.provider.ValueSupplier;
 import org.gradle.api.internal.tasks.PropertyFileCollection;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.FileNormalizer;
@@ -111,6 +113,7 @@ public class FileParameterUtils {
         OutputFilePropertyType filePropertyType,
         FileCollectionFactory fileCollectionFactory,
         boolean locationOnly,
+        boolean maybeFinalize,
         Consumer<OutputFilePropertySpec> consumer
     ) {
         Object unpackedValue = value.getUnprocessedValue();
@@ -119,7 +122,7 @@ public class FileParameterUtils {
             unpackedValue = ((FileSystemLocationProperty<?>) unpackedValue).getLocationOnly();
         }
         if (unpackedValue instanceof Provider) {
-            unpackedValue = ((Provider<?>) unpackedValue).getOrNull();
+            unpackedValue = maybeFinalize ? ((Provider<?>) unpackedValue).getOrNull() : ((ProviderInternal<?>) unpackedValue).calculateValue(ValueSupplier.ValueConsumer.DoNotFinalize).orNull();
         }
         if (unpackedValue == null) {
             return;

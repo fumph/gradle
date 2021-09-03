@@ -785,12 +785,6 @@ class DefaultExecutionPlanParallelTest extends AbstractExecutionPlanSpec {
 
         when:
         addToGraphAndPopulate(second, first)
-
-        then:
-        1 * nodeValidator.hasValidationProblems({ LocalTaskNode node -> node.task == first }) >> true
-        1 * nodeValidator.hasValidationProblems({ LocalTaskNode node -> node.task == second }) >> false
-
-        when:
         def invalidTaskNode = selectNextTaskNode()
 
         then:
@@ -819,12 +813,6 @@ class DefaultExecutionPlanParallelTest extends AbstractExecutionPlanSpec {
 
         when:
         addToGraphAndPopulate(second, first)
-
-        then:
-        1 * nodeValidator.hasValidationProblems({ LocalTaskNode node -> node.task == first }) >> false
-        1 * nodeValidator.hasValidationProblems({ LocalTaskNode node -> node.task == second }) >> true
-
-        when:
         def validTaskNode = selectNextTaskNode()
 
         then:
@@ -860,13 +848,6 @@ class DefaultExecutionPlanParallelTest extends AbstractExecutionPlanSpec {
 
         when:
         addToGraphAndPopulate(broken, invalid, regular)
-
-        then:
-        1 * nodeValidator.hasValidationProblems({ LocalTaskNode node -> node.task == broken }) >> false
-        1 * nodeValidator.hasValidationProblems({ LocalTaskNode node -> node.task == invalid }) >> true
-        1 * nodeValidator.hasValidationProblems({ LocalTaskNode node -> node.task == regular }) >> false
-
-        when:
         def firstTaskNode = selectNextTaskNode()
 
         then:

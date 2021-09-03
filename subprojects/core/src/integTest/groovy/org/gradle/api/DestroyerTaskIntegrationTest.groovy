@@ -19,9 +19,6 @@ package org.gradle.api
 import org.gradle.integtests.fixtures.AbstractIntegrationSpec
 import org.gradle.test.fixtures.file.TestFile
 
-import static org.gradle.integtests.fixtures.executer.TaskOrderSpecs.*
-
-
 class DestroyerTaskIntegrationTest extends AbstractIntegrationSpec {
     BuildFixture rootBuild = new RootBuild(testDirectory)
 
@@ -31,6 +28,7 @@ class DestroyerTaskIntegrationTest extends AbstractIntegrationSpec {
 
         def cleanFoo = foo.task('cleanFoo').destroys('build/foo')
         def cleanBar = bar.task('cleanBar').destroys('build/bar').dependsOn(cleanFoo)
+        def clean = rootBuild.task('clean').dependsOn(cleanFoo).dependsOn(cleanBar)
         def generateFoo = foo.task('generateFoo').produces('build/foo')
         def generateBar = bar.task('generateBar').produces('build/bar')
         def generate = rootBuild.task('generate').dependsOn(generateBar).dependsOn(generateFoo)
@@ -39,10 +37,10 @@ class DestroyerTaskIntegrationTest extends AbstractIntegrationSpec {
 
         when:
         args '--parallel', '--max-workers=2'
-        succeeds(cleanBar.path, generate.path)
+        succeeds(clean.path, generate.path)
 
         then:
-        result.assertTaskOrder(cleanFoo.fullPath, cleanBar.fullPath)
+        result.assertTaskOrder(cleanFoo.fullPath, cleanBar.fullPath, clean.fullPath)
         result.assertTaskOrder(cleanFoo.fullPath, generateFoo.fullPath, generate.fullPath)
         result.assertTaskOrder(cleanBar.fullPath, generateBar.fullPath, generate.fullPath)
     }
@@ -53,6 +51,7 @@ class DestroyerTaskIntegrationTest extends AbstractIntegrationSpec {
 
         def cleanFoo = foo.task('cleanFoo').destroys('build/foo')
         def cleanBar = bar.task('cleanBar').destroys('build/bar').dependsOn(cleanFoo)
+        def clean = rootBuild.task('clean').dependsOn(cleanFoo).dependsOn(cleanBar)
         def generateFoo = foo.task('generateFoo').produces('build/foo')
         def generateBar = bar.task('generateBar').produces('build/bar')
         def generate = rootBuild.task('generate').dependsOn(generateBar).dependsOn(generateFoo)
@@ -61,10 +60,10 @@ class DestroyerTaskIntegrationTest extends AbstractIntegrationSpec {
 
         when:
         args '--parallel', '--max-workers=2'
-        succeeds(cleanBar.path, generate.path)
+        succeeds(clean.path, generate.path)
 
         then:
-        result.assertTaskOrder(cleanFoo.fullPath, cleanBar.fullPath)
+        result.assertTaskOrder(cleanFoo.fullPath, cleanBar.fullPath, clean.fullPath)
         result.assertTaskOrder(cleanFoo.fullPath, generateFoo.fullPath, generate.fullPath)
         result.assertTaskOrder(cleanBar.fullPath, generateBar.fullPath, generate.fullPath)
     }
@@ -74,21 +73,22 @@ class DestroyerTaskIntegrationTest extends AbstractIntegrationSpec {
         def bar = subproject(':bar')
 
         def cleanFoo = foo.task('cleanFoo').destroys('build/foo')
-        def cleanBar = bar.task('cleanBar').destroys('build/bar').dependsOn(cleanFoo)
+        def cleanBar = bar.task('cleanBar').destroys('build/bar')
+        def clean = rootBuild.task('clean').dependsOn(cleanFoo).dependsOn(cleanBar)
         def generateFoo = foo.task('generateFoo').produces('build/foo')
-        def generateBar = bar.task('generateBar').produces('build/bar')
+        def generateBar = bar.task('generateBar').produces('build/bar').dependsOn(generateFoo)
         def generate = rootBuild.task('generate').dependsOn(generateBar).dependsOn(generateFoo)
 
         writeAllFiles()
 
         when:
         args '--parallel', '--max-workers=2'
-        succeeds(generate.path, cleanBar.path)
+        succeeds(generate.path, clean.path)
 
         then:
-        result.assertTaskOrder(cleanFoo.fullPath, cleanBar.fullPath)
-        result.assertTaskOrder(generateFoo.fullPath, any(generate.fullPath, cleanFoo.fullPath))
-        result.assertTaskOrder(generateBar.fullPath, any(generate.fullPath, cleanBar.fullPath))
+        result.assertTaskOrder(generateFoo.fullPath, generateBar.fullPath, generate.fullPath)
+        result.assertTaskOrder(generateFoo.fullPath, cleanFoo.fullPath, clean.fullPath)
+        result.assertTaskOrder(generateBar.fullPath, cleanBar.fullPath, clean.fullPath)
     }
 
     def "can order destroyer task after producer tasks with a dependency in another build"() {
@@ -96,21 +96,22 @@ class DestroyerTaskIntegrationTest extends AbstractIntegrationSpec {
         def bar = subproject(':bar')
 
         def cleanFoo = foo.task('cleanFoo').destroys('build/foo')
-        def cleanBar = bar.task('cleanBar').destroys('build/bar').dependsOn(cleanFoo)
+        def cleanBar = bar.task('cleanBar').destroys('build/bar')
+        def clean = rootBuild.task('clean').dependsOn(cleanFoo).dependsOn(cleanBar)
         def generateFoo = foo.task('generateFoo').produces('build/foo')
-        def generateBar = bar.task('generateBar').produces('build/bar')
+        def generateBar = bar.task('generateBar').produces('build/bar').dependsOn(generateFoo)
         def generate = rootBuild.task('generate').dependsOn(generateBar).dependsOn(generateFoo)
 
         writeAllFiles()
 
         when:
         args '--parallel', '--max-workers=2'
-        succeeds(generate.path, cleanBar.path)
+        succeeds(generate.path, clean.path)
 
         then:
-        result.assertTaskOrder(cleanFoo.fullPath, cleanBar.fullPath)
-        result.assertTaskOrder(generateFoo.fullPath, any(generate.fullPath, cleanFoo.fullPath))
-        result.assertTaskOrder(generateBar.fullPath, any(generate.fullPath, cleanBar.fullPath))
+        result.assertTaskOrder(generateFoo.fullPath, generateBar.fullPath, generate.fullPath)
+        result.assertTaskOrder(generateFoo.fullPath, cleanFoo.fullPath, clean.fullPath)
+        result.assertTaskOrder(generateBar.fullPath, cleanBar.fullPath, clean.fullPath)
     }
 
     void writeAllFiles() {

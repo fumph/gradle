@@ -44,7 +44,7 @@ public class TaskNameResolvingBuildConfigurationAction implements BuildConfigura
             List<TaskSelection> taskSelections = commandLineTaskParser.parseTasks(taskParameter);
             for (TaskSelection taskSelection : taskSelections) {
                 LOGGER.info("Selected primary task '{}' from project {}", taskSelection.getTaskName(), taskSelection.getProjectPath());
-                context.getExecutionPlan().addEntryTasks(taskSelection.getTasks(), 0);
+                context.getExecutionPlan().addEntryTasks(taskSelection.getTasks());
             }
         }
 
