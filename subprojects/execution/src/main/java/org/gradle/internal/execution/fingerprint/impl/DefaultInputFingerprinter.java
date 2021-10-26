@@ -18,11 +18,14 @@ package org.gradle.internal.execution.fingerprint.impl;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSortedMap;
+import org.gradle.internal.deprecation.DeprecationLogger;
 import org.gradle.internal.execution.fingerprint.FileCollectionFingerprinter;
 import org.gradle.internal.execution.fingerprint.FileCollectionFingerprinterRegistry;
+import org.gradle.internal.execution.fingerprint.FileCollectionSnapshotter;
 import org.gradle.internal.execution.fingerprint.FileNormalizationSpec;
 import org.gradle.internal.execution.fingerprint.InputFingerprinter;
 import org.gradle.internal.fingerprint.CurrentFileCollectionFingerprint;
+import org.gradle.internal.fingerprint.DirectorySensitivity;
 import org.gradle.internal.fingerprint.FileCollectionFingerprint;
 import org.gradle.internal.snapshot.ValueSnapshot;
 import org.gradle.internal.snapshot.ValueSnapshotter;
@@ -31,13 +34,16 @@ import java.util.function.Consumer;
 
 public class DefaultInputFingerprinter implements InputFingerprinter {
 
+    private final FileCollectionSnapshotter snapshotter;
     private final FileCollectionFingerprinterRegistry fingerprinterRegistry;
     private final ValueSnapshotter valueSnapshotter;
 
     public DefaultInputFingerprinter(
+        FileCollectionSnapshotter snapshotter,
         FileCollectionFingerprinterRegistry fingerprinterRegistry,
         ValueSnapshotter valueSnapshotter
     ) {
+        this.snapshotter = snapshotter;
         this.fingerprinterRegistry = fingerprinterRegistry;
         this.valueSnapshotter = valueSnapshotter;
     }
@@ -50,7 +56,7 @@ public class DefaultInputFingerprinter implements InputFingerprinter {
         ImmutableSortedMap<String, CurrentFileCollectionFingerprint> knownCurrentFingerprints,
         Consumer<InputVisitor> inputs
     ) {
-        InputCollectingVisitor visitor = new InputCollectingVisitor(previousValueSnapshots, previousFingerprints, fingerprinterRegistry, valueSnapshotter, knownCurrentValueSnapshots, knownCurrentFingerprints);
+        InputCollectingVisitor visitor = new InputCollectingVisitor(previousValueSnapshots, previousFingerprints, snapshotter, fingerprinterRegistry, valueSnapshotter, knownCurrentValueSnapshots, knownCurrentFingerprints);
         inputs.accept(visitor);
         return visitor.complete();
     }
@@ -63,6 +69,7 @@ public class DefaultInputFingerprinter implements InputFingerprinter {
     private static class InputCollectingVisitor implements InputVisitor {
         private final ImmutableSortedMap<String, ValueSnapshot> previousValueSnapshots;
         private final ImmutableSortedMap<String, ? extends FileCollectionFingerprint> previousFingerprints;
+        private final FileCollectionSnapshotter snapshotter;
         private final FileCollectionFingerprinterRegistry fingerprinterRegistry;
         private final ValueSnapshotter valueSnapshotter;
         private final ImmutableSortedMap<String, ValueSnapshot> knownCurrentValueSnapshots;
@@ -74,6 +81,7 @@ public class DefaultInputFingerprinter implements InputFingerprinter {
         public InputCollectingVisitor(
             ImmutableSortedMap<String, ValueSnapshot> previousValueSnapshots,
             ImmutableSortedMap<String, ? extends FileCollectionFingerprint> previousFingerprints,
+            FileCollectionSnapshotter snapshotter,
             FileCollectionFingerprinterRegistry fingerprinterRegistry,
             ValueSnapshotter valueSnapshotter,
             ImmutableSortedMap<String, ValueSnapshot> knownCurrentValueSnapshots,
@@ -81,6 +89,7 @@ public class DefaultInputFingerprinter implements InputFingerprinter {
         ) {
             this.previousValueSnapshots = previousValueSnapshots;
             this.previousFingerprints = previousFingerprints;
+            this.snapshotter = snapshotter;
             this.fingerprinterRegistry = fingerprinterRegistry;
             this.valueSnapshotter = valueSnapshotter;
             this.knownCurrentValueSnapshots = knownCurrentValueSnapshots;
@@ -116,15 +125,23 @@ public class DefaultInputFingerprinter implements InputFingerprinter {
             }
 
             FileCollectionFingerprint previousFingerprint = previousFingerprints.get(propertyName);
-            FileNormalizationSpec normalizationSpec = DefaultFileNormalizationSpec.from(value.getNormalizer(), value.getDirectorySensitivity(), value.getLineEndingNormalization());
-            FileCollectionFingerprinter fingerprinter = fingerprinterRegistry.getFingerprinter(normalizationSpec);
-            CurrentFileCollectionFingerprint fingerprint;
             try {
-                fingerprint = fingerprinter.fingerprint(value.getFiles(), previousFingerprint);
+                FileCollectionSnapshotter.Result result = snapshotter.snapshotResult(value.getFiles());
+                DirectorySensitivity directorySensitivity = value.getDirectorySensitivity().orElse(result.isTree() ? DirectorySensitivity.IGNORE_DIRECTORIES : DirectorySensitivity.DEFAULT);
+                if (result.isTree() && !value.getDirectorySensitivity().isPresent()) {
+                    DeprecationLogger.deprecateBehaviour("Relying on FileTrees for ignoring empty directories")
+                        .withAdvice("Annotate the property with @IgnoreEmptyDirectories")
+                        .willBeRemovedInGradle8()
+                        .undocumented()
+                        .nagUser();
+                }
+                FileNormalizationSpec normalizationSpec = DefaultFileNormalizationSpec.from(value.getNormalizer(), directorySensitivity, value.getLineEndingNormalization());
+                FileCollectionFingerprinter fingerprinter = fingerprinterRegistry.getFingerprinter(normalizationSpec);
+                CurrentFileCollectionFingerprint fingerprint = fingerprinter.fingerprint(result.getSnapshot(), previousFingerprint);
+                fingerprintsBuilder.put(propertyName, fingerprint);
             } catch (Exception e) {
                 throw new InputFileFingerprintingException(propertyName, e);
             }
-            fingerprintsBuilder.put(propertyName, fingerprint);
         }
 
         public Result complete() {
