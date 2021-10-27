@@ -23,6 +23,14 @@
             "changes": [
                 "org.gradle.kotlin.dsl.support.delegates.SettingsDelegate.include(java.lang.String[])"
             ]
+        },
+        {
+            "type": "org.gradle.api.Transformer",
+            "member": "Method org.gradle.api.Transformer.transform(java.lang.Object)",
+            "acceptation": "This interface was, in fact, null-returning already; see ContentFilterable.filter(Transformer)",
+            "changes": [
+                "From non-null returning to null returning breaking change"
+            ]
         }
     ]
 }
