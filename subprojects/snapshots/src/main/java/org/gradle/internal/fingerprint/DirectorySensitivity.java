@@ -33,7 +33,7 @@ public enum DirectorySensitivity {
     /**
      * Ignore directories
      */
-    IGNORE_DIRECTORIES(snapshot -> snapshot.getType() != FileType.Directory);
+    IGNORE_DIRECTORIES(snapshot -> snapshot.getType() == FileType.RegularFile);
 
     private final Predicate<FileSystemLocationSnapshot> fingerprintCheck;
 
