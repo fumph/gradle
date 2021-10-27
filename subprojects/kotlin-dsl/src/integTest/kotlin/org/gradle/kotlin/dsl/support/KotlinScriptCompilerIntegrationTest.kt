@@ -12,8 +12,6 @@ class KotlinScriptCompilerIntegrationTest : AbstractKotlinIntegrationTest() {
     fun `Build scripts are compiled with jsr305 strict mode`() {
 
         // given:
-        assumeNonEmbeddedGradleExecuter()
-
         withFile(
             "buildSrc/src/main/java/StringTransformer.java",
             """
