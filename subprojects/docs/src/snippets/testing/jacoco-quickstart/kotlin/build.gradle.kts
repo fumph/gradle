@@ -25,7 +25,7 @@ dependencies {
 // tag::testtask-configuration[]
 tasks.test {
     extensions.configure(JacocoTaskExtension::class) {
-        destinationFile = layout.buildDirectory.file("jacoco/jacocoTest.exec").get().asFile
+        setDestinationFile(layout.buildDirectory.file("jacoco/jacocoTest.exec").get().asFile) // TODO (donat) this doesn't seem right
         classDumpDir = layout.buildDirectory.dir("jacoco/classpathdumps").get().asFile
     }
 }
