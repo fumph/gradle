@@ -219,7 +219,7 @@ tasks.register<Copy>("filter") {
     }
     // Use a closure to remove lines
     filter { line: String ->
-        if (line.startsWith('-')) null else line // TODO (donat) fix this!
+        if (line.startsWith('-')) null else line
     }
     filteringCharset = "UTF-8"
 }
