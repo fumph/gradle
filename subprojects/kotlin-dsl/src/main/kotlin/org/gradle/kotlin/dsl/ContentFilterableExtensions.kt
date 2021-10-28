@@ -114,6 +114,12 @@ fun <T : FilterReader> ContentFilterable.filter(filterType: KClass<T>, propertie
     if (properties.isEmpty()) filter(filterType.java)
     else filter(properties, filterType.java)
 
+
+/**
+ * Creates a new transformer that can return null and can be used in the context of [ContentFilterable.filter].
+ *
+ * @param transformer the spec of the transformer to be returned.
+ */
 fun ContentFilterable.nullableTransformer(transformer: (String) -> String?): Transformer<String, String> {
     return object : NullableTransformer<String, String>() {
         override fun transform(input: String): String? {
