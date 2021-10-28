@@ -32,7 +32,7 @@ public abstract class NullableTransformer<OUT, IN> implements Transformer<OUT, I
     @Override
     public abstract OUT transform(IN in);
 
-    public Transformer<OUT, IN> toTransformer() {
+    public Transformer<OUT, IN> asTransformer() {
         return this;
     }
 }

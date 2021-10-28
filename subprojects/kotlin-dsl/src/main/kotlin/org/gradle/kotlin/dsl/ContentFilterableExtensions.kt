@@ -125,5 +125,5 @@ fun ContentFilterable.nullableTransformer(transformer: (String) -> String?): Tra
         override fun transform(input: String): String? {
             return transformer.invoke(input)
         }
-    }.toTransformer()
+    }.asTransformer()
 }
