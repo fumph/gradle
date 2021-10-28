@@ -157,7 +157,7 @@ public class JacocoPluginExtension {
         final String taskName = task.getName();
         LOGGER.debug("Applying Jacoco to " + taskName);
         final JacocoTaskExtension extension = task.getExtensions().create(TASK_EXTENSION_NAME, JacocoTaskExtension.class, objects, agent, task);
-        extension.setDestinationFile(layout.getBuildDirectory().file("jacoco/" + taskName + ".exec").map(RegularFile::getAsFile).get());
+        extension.setDestinationFile(layout.getBuildDirectory().file("jacoco/" + taskName + ".exec").map(RegularFile::getAsFile));
 
         task.getJvmArgumentProviders().add(new JacocoAgent(extension));
         task.doFirst(new JacocoOutputCleanupTestTaskAction(
