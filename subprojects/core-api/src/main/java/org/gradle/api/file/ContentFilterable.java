@@ -80,7 +80,7 @@ public interface ContentFilterable {
      * Note, that due to the nullability constraints clients written in Kotlin cannot return null values as it results in a
      * compile-time error. To fix that, the {@code nullableTransformer} utility method should be used:
      * <pre>
-     *     filter(nullableTransformer { line -> ... })
+     *     filter(nullableTransformer { line -&gt; ... })
      * </pre>
      * @param transformer to implement line based filtering
      * @return this
