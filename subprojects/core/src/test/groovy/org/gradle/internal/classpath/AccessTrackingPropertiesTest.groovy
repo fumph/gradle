@@ -16,150 +16,51 @@
 
 package org.gradle.internal.classpath
 
-import spock.lang.Specification
-
-import java.util.function.BiConsumer
-
-class AccessTrackingPropertiesTest extends Specification {
-    def "access to existing property with get() is tracked"() {
-        given:
-        Properties props = propertiesWithContent someProperty: 'someValue'
-        BiConsumer<String, Object> consumer = Mock()
-        AccessTrackingProperties trackingProperties = new AccessTrackingProperties(props, consumer)
-
-        when:
-        def returnedValue = trackingProperties.get('someProperty')
-
-        then:
-        returnedValue == 'someValue'
-        1 * consumer.accept('someProperty', 'someValue')
-    }
-
-    def "access to existing property with getOrDefault() is tracked"() {
-        given:
-        Properties props = propertiesWithContent someProperty: 'someValue'
-        BiConsumer<String, Object> consumer = Mock()
-        AccessTrackingProperties trackingProperties = new AccessTrackingProperties(props, consumer)
-
-        when:
-        def returnedValue = trackingProperties.getOrDefault('someProperty', 'defaultValue')
-
-        then:
-        returnedValue == 'someValue'
-        1 * consumer.accept('someProperty', 'someValue')
+class AccessTrackingPropertiesTest extends AbstractAccessTrackingMapTest {
+    @Override
+    protected Properties getMapUnderTestToRead() {
+        return new AccessTrackingProperties(propertiesWithContent(innerMap), consumer)
     }
 
     def "access to existing property with getProperty() is tracked"() {
-        given:
-        Properties props = propertiesWithContent someProperty: 'someValue'
-        BiConsumer<String, Object> consumer = Mock()
-        AccessTrackingProperties trackingProperties = new AccessTrackingProperties(props, consumer)
-
         when:
-        def returnedValue = trackingProperties.get('someProperty')
+        def returnedValue = getMapUnderTestToRead().getProperty('existing')
 
         then:
-        returnedValue == 'someValue'
-        1 * consumer.accept('someProperty', 'someValue')
+        returnedValue == 'existingValue'
+        1 * consumer.accept('existing', 'existingValue')
+        0 * consumer._
     }
 
     def "access to existing property with getProperty() with default is tracked"() {
-        given:
-        Properties props = propertiesWithContent someProperty: 'someValue'
-        BiConsumer<String, Object> consumer = Mock()
-        AccessTrackingProperties trackingProperties = new AccessTrackingProperties(props, consumer)
-
         when:
-        def returnedValue = trackingProperties.get('someProperty', 'defaultValue')
+        def returnedValue = getMapUnderTestToRead().getProperty('existing', 'existingValue')
 
         then:
-        returnedValue == 'someValue'
-        1 * consumer.accept('someProperty', 'someValue')
-    }
-
-    def "access to existing property with entrySet() is tracked"() {
-        given:
-        Properties props = propertiesWithContent someProperty: 'someValue'
-        BiConsumer<String, Object> consumer = Mock()
-        AccessTrackingProperties trackingProperties = new AccessTrackingProperties(props, consumer)
-
-        when:
-        def returnedEntry = trackingProperties.entrySet().iterator().next()
-
-        then:
-        returnedEntry.key == 'someProperty' && returnedEntry.value == 'someValue'
-        1 * consumer.accept('someProperty', 'someValue')
-    }
-
-    def "access to existing property with forEach() is tracked"() {
-        given:
-        Properties props = propertiesWithContent someProperty: 'someValue'
-        BiConsumer<String, Object> consumer = Mock()
-        AccessTrackingProperties trackingProperties = new AccessTrackingProperties(props, consumer)
-
-        when:
-        trackingProperties.forEach {k, v -> }
-
-        then:
-        1 * consumer.accept('someProperty', 'someValue')
-    }
-
-    def "access to missing property with get() is tracked"() {
-        given:
-        Properties props = propertiesWithContent someProperty: 'someValue'
-        BiConsumer<String, Object> consumer = Mock()
-        AccessTrackingProperties trackingProperties = new AccessTrackingProperties(props, consumer)
-
-        when:
-        def returnedValue = trackingProperties.get('missingProperty')
-
-        then:
-        returnedValue == null
-        1 * consumer.accept('missingProperty', null)
-    }
-
-    def "access to missing property with getOrDefault() is tracked"() {
-        given:
-        Properties props = propertiesWithContent someProperty: 'someValue'
-        BiConsumer<String, Object> consumer = Mock()
-        AccessTrackingProperties trackingProperties = new AccessTrackingProperties(props, consumer)
-
-        when:
-        def returnedValue = trackingProperties.getOrDefault('missingProperty', 'defaultValue')
-
-        then:
-        returnedValue == 'defaultValue'
-        1 * consumer.accept('missingProperty', null)
+        returnedValue == 'existingValue'
+        1 * consumer.accept('existing', 'existingValue')
+        0 * consumer._
     }
 
     def "access to missing property with getProperty() is tracked"() {
-        given:
-        Properties props = propertiesWithContent someProperty: 'someValue'
-        BiConsumer<String, Object> consumer = Mock()
-        AccessTrackingProperties trackingProperties = new AccessTrackingProperties(props, consumer)
-
         when:
-        def returnedValue = trackingProperties.getProperty('missingProperty')
+        def returnedValue = getMapUnderTestToRead().getProperty('missing')
 
         then:
         returnedValue == null
-        1 * consumer.accept('missingProperty', null)
+        1 * consumer.accept('missing', null)
+        0 * consumer._
     }
 
     def "access to missing property with getProperty() with default is tracked"() {
-        given:
-        Properties props = propertiesWithContent someProperty: 'someValue'
-        BiConsumer<String, Object> consumer = Mock()
-        AccessTrackingProperties trackingProperties = new AccessTrackingProperties(props, consumer)
-
         when:
-        def returnedValue = trackingProperties.getProperty('missingProperty', 'defaultValue')
+        def returnedValue = getMapUnderTestToRead().getProperty('missing', 'defaultValue')
 
         then:
         returnedValue == 'defaultValue'
-        1 * consumer.accept('missingProperty', null)
+        1 * consumer.accept('missing', null)
+        0 * consumer._
     }
-
 
     private static Properties propertiesWithContent(Map<String, String> contents) {
         Properties props = new Properties()
