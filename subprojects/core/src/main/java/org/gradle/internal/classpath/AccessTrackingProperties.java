@@ -54,7 +54,7 @@ class AccessTrackingProperties extends Properties {
 
     @Override
     public Set<String> stringPropertyNames() {
-        return delegate.stringPropertyNames();
+        return new AccessTrackingSet<>(delegate.stringPropertyNames(), key -> onAccess.accept((String) key, delegate.get(key)));
     }
 
     @Override
@@ -79,7 +79,7 @@ class AccessTrackingProperties extends Properties {
 
     @Override
     public Set<Object> keySet() {
-        return delegate.keySet();
+        return new AccessTrackingSet<>(delegate.keySet(), key -> onAccess.accept((String) key, delegate.get(key)));
     }
 
     @Override

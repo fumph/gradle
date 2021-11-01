@@ -82,6 +82,68 @@ class AccessTrackingPropertiesTest extends AbstractAccessTrackingMapTest {
         0 * consumer._
     }
 
+    def "access to existing element with stringPropertyNames contains is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().stringPropertyNames().contains('existing')
+
+        then:
+        result
+        1 * consumer.accept('existing', 'existingValue')
+        0 * consumer._
+    }
+
+    def "access to missing element with stringPropertyNames contains is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().stringPropertyNames().contains('missing')
+
+        then:
+        !result
+        1 * consumer.accept('missing', null)
+        0 * consumer._
+    }
+
+    def "access to existing element with stringPropertyNames containsAll is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().stringPropertyNames().containsAll(Set.of('existing'))
+
+        then:
+        result
+        1 * consumer.accept('existing', 'existingValue')
+        0 * consumer._
+    }
+
+    def "access to missing element with stringPropertyNames containsAll is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().stringPropertyNames().containsAll(Set.of('missing'))
+
+        then:
+        !result
+        1 * consumer.accept('missing', null)
+        0 * consumer._
+    }
+
+    def "access to existing elements with stringPropertyNames containsAll is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().stringPropertyNames().containsAll(Set.of('existing', 'other'))
+
+        then:
+        result
+        1 * consumer.accept('existing', 'existingValue')
+        1 * consumer.accept('other', 'otherValue')
+        0 * consumer._
+    }
+
+    def "access to existing and missing elements with stringPropertyNames containsAll is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().stringPropertyNames().containsAll(Set.of('existing', 'missing'))
+
+        then:
+        !result
+        1 * consumer.accept('existing', 'existingValue')
+        1 * consumer.accept('missing', null)
+        0 * consumer._
+    }
+
     private static Properties propertiesWithContent(Map<String, String> contents) {
         Properties props = new Properties()
         props.putAll(contents)
