@@ -88,4 +88,98 @@ abstract class AbstractAccessTrackingMapTest extends Specification {
         1 * consumer.accept('other', 'otherValue')
         0 * consumer._
     }
+
+
+    def "access to existing element with entrySet contains is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().entrySet().contains(Map.entry('existing', 'existingValue'))
+
+        then:
+        result
+        1 * consumer.accept('existing', 'existingValue')
+        0 * consumer._
+    }
+
+    def "access to existing element with entrySet contains with different value is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().entrySet().contains(Map.entry('existing', 'otherValue'))
+
+        then:
+        !result
+        1 * consumer.accept('existing', 'existingValue')
+        0 * consumer._
+    }
+
+    def "access to missing element with entrySet contains is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().entrySet().contains(Map.entry('missing', 'someValue'))
+
+        then:
+        !result
+        1 * consumer.accept('missing', null)
+        0 * consumer._
+    }
+
+    def "access to existing element with entrySet containsAll is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().entrySet().containsAll(Set.of(Map.entry('existing', 'existingValue')))
+
+        then:
+        result
+        1 * consumer.accept('existing', 'existingValue')
+        0 * consumer._
+    }
+
+    def "access to multiple existing elements with entrySet containsAll is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().entrySet().containsAll(Set.of(Map.entry('existing', 'existingValue'), Map.entry('other', 'otherValue')))
+
+        then:
+        result
+        1 * consumer.accept('existing', 'existingValue')
+        1 * consumer.accept('other', 'otherValue')
+        0 * consumer._
+    }
+
+    def "access to existing element with entrySet containsAll with different value is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().entrySet().containsAll(Set.of(Map.entry('existing', 'otherValue')))
+
+        then:
+        !result
+        1 * consumer.accept('existing', 'existingValue')
+        0 * consumer._
+    }
+
+    def "access to multiple existing elements with entrySet containsAll with different value is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().entrySet().containsAll(Set.of(Map.entry('existing', 'otherValue'), Map.entry('other', 'otherValue')))
+
+        then:
+        !result
+        1 * consumer.accept('existing', 'existingValue')
+        1 * consumer.accept('other', 'otherValue')
+        0 * consumer._
+    }
+
+    def "access to missing element with entrySet containsAll is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().entrySet().containsAll(Set.of(Map.entry('missing', 'someValue')))
+
+        then:
+        !result
+        1 * consumer.accept('missing', null)
+        0 * consumer._
+    }
+
+    def "access to missing and existing elements with entrySet containsAll is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().entrySet().containsAll(Set.of(Map.entry('missing', 'someValue'), Map.entry('existing', 'existingValue')))
+
+        then:
+        !result
+        1 * consumer.accept('missing', null)
+        1 * consumer.accept('existing', 'existingValue')
+        0 * consumer._
+    }
 }

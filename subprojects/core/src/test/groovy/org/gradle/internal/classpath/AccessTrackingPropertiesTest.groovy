@@ -62,9 +62,49 @@ class AccessTrackingPropertiesTest extends AbstractAccessTrackingMapTest {
         0 * consumer._
     }
 
+    def "access to existing element with entrySet contains with null value is not tracked"() {
+        // It is not possible to have an externally-set property with null value in the entrySet(). If the property is unset then it isn't present in the entrySet() at all.
+        when:
+        def result = getMapUnderTestToRead().entrySet().contains(entryWithNullValue('existing'))
+
+        then:
+        !result
+        0 * consumer._
+    }
+
+    def "access to existing element with entrySet containsAll with null value is not tracked"() {
+        // It is not possible to have an externally-set property with null value in the entrySet(). If the property is unset then it isn't present in the entrySet() at all.
+        when:
+        def result = getMapUnderTestToRead().entrySet().containsAll(Set.of(entryWithNullValue('existing')))
+
+        then:
+        !result
+        0 * consumer._
+    }
+
     private static Properties propertiesWithContent(Map<String, String> contents) {
         Properties props = new Properties()
         props.putAll(contents)
         return props
+    }
+
+    private static Map.Entry<String, String> entryWithNullValue(String key) {
+        // Map.entry doesn't allow null keys or values so a custom implementation is needed.
+        return new Map.Entry<String, String>() {
+            @Override
+            String getKey() {
+                return key
+            }
+
+            @Override
+            String getValue() {
+                return null
+            }
+
+            @Override
+            String setValue(String value) {
+                throw new UnsupportedOperationException()
+            }
+        }
     }
 }
