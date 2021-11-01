@@ -182,4 +182,24 @@ abstract class AbstractAccessTrackingMapTest extends Specification {
         1 * consumer.accept('existing', 'existingValue')
         0 * consumer._
     }
+
+    def "access to existing element with containsKey is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().containsKey('existing')
+
+        then:
+        result
+        1 * consumer.accept('existing', 'existingValue')
+        0 * consumer._
+    }
+
+    def "access to missing element with containsKey is tracked"() {
+        when:
+        def result = getMapUnderTestToRead().containsKey('missing')
+
+        then:
+        !result
+        1 * consumer.accept('missing', null)
+        0 * consumer._
+    }
 }

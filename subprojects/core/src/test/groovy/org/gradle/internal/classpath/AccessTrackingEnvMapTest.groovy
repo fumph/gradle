@@ -22,24 +22,6 @@ class AccessTrackingEnvMapTest extends AbstractAccessTrackingMapTest {
         return new AccessTrackingEnvMap(innerMap, consumer)
     }
 
-    def "access to existing element with containsKey is tracked"() {
-        when:
-        getMapUnderTestToRead().containsKey('existing')
-
-        then:
-        1 * consumer.accept('existing', 'existingValue')
-        0 * consumer._
-    }
-
-    def "access to missing element with containsKey is tracked"() {
-        when:
-        getMapUnderTestToRead().containsKey('missing')
-
-        then:
-        1 * consumer.accept('missing', null)
-        0 * consumer._
-    }
-
     def "access to non-string element with containsKey throws"() {
         when:
         getMapUnderTestToRead().containsKey(Integer.valueOf(5))

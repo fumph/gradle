@@ -166,7 +166,9 @@ class AccessTrackingProperties extends Properties {
 
     @Override
     public boolean containsKey(Object key) {
-        return delegate.containsKey(key);
+        boolean result = delegate.containsKey(key);
+        onAccess.accept((String) key, result ? delegate.get(key) : null);
+        return result;
     }
 
     @Override
